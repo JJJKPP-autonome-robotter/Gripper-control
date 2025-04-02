@@ -6,6 +6,7 @@
 int main()
 {
     stdio_init_all();
+    sleep_ms(2000);
 
     // Initialise the Wi-Fi chip
     if (cyw43_arch_init()) {
@@ -20,24 +21,24 @@ int main()
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
         char input_buffer[10]; // Input buffer
 
-        if (fgets(input_buffer, sizeof(input_buffer), stdin)) {
-            input_buffer[strcspn(input_buffer, "\r\n")] = 0; // Remove new line chars
+        int ch = getchar_timeout_us(0);
 
-            if (strcmp(input_buffer, "open") == 0) {
-                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0); // Toggle LED
+        if (ch != PICO_ERROR_TIMEOUT) {
+            if (ch == 'o') {
+                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
                 sleep_ms(1000);
-                printf("open"); // Return status
-                continue;
-            }
-            
-            if (strcmp(input_buffer, "close") == 0) {
-                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0); // Toggle LED
-                sleep_ms(1000);
-                printf("closed"); // Return status
-                continue;
+                printf("open\n");
             }
 
-            printf("Unkown command");
+            if (ch == 'c') {
+                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+                sleep_ms(1000);
+                printf("closed\n");
+            }
         }
-    }
+
+        sleep_ms(50);
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+        sleep_ms(50);
+    }   
 }
