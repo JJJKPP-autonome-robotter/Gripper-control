@@ -9,39 +9,47 @@
 #define MOTOR_REVERSE_PIN 5
 #define LIMIT_SWITCH_FORWARD_PIN 9
 #define LIMIT_SWITCH_REVERSE_PIN 8
-#define I2C_SDA_PIN 0
-#define I2C_SCL_PIN 1
+#define I2C_SDA_PIN 10
+#define I2C_SCL_PIN 11
 #define ONBOARD_LED 25
 
 // Define PWM freq
-#define PWM_FREQUENCY 1000
-#define SYSTEM_CLK 125000000
+#define WRAP_VALUE 1000
+#define CLK_DIV 125.0f
+
+Adafruit_VL53L1X vl53 = Adafruit_VL53L1X();
 
 // Define PWM on a pin
 void setupPwm(uint pin) {
   gpio_set_function(pin, GPIO_FUNC_PWM);  // Set pinmode
-  uint slice_num = pwm_gpio_to_slice_num(pin);  // Get the PWM slice
 
-  uint32_t wrap_value = SYSTEM_CLK / PWM_FREQUENCY;  // Get wrap value for desired freq
-  pwm_set_wrap(slice_num, wrap_value);  // Set the wrap value
-  pwm_set_clkdiv(slice_num, 1.0);  // Set the clock divider
-  pwm_set_chan_level(slice_num, pwm_gpio_to_channel(pin), 0);  // Set dutycyle to 0
-  pwm_set_enabled(slice_num, true);  // Start PWM
+  uint slice = pwm_gpio_to_slice_num(pin);  // Get the PWM slice
+  uint channel = pwm_gpio_to_channel(pin);
+
+  pwm_set_clkdiv(slice, CLK_DIV);  // Set the clock divider
+  pwm_set_wrap(slice, WRAP_VALUE);  // Set the wrap value
+  pwm_set_chan_level(slice, channel, 0);  // Set dutycyle to 0
+  pwm_set_enabled(slice, true);  // Start PWM
 }
 
 void setMotorSpeed(int speed) {
-  uint duty = (speed == 100) ? 65535 : (abs(speed) * 65535 / 100);  // Convert speed to duty cycle
+  uint slice_forward = pwm_gpio_to_slice_num(MOTOR_FORWARD_PIN);
+  uint chan_forward = pwm_gpio_to_channel(MOTOR_FORWARD_PIN);
+  uint slice_reverse = pwm_gpio_to_slice_num(MOTOR_REVERSE_PIN);
+  uint chan_reverse = pwm_gpio_to_channel(MOTOR_REVERSE_PIN);
+
+  uint duty = abs(speed) * WRAP_VALUE / 100;  // Convert speed to duty cycle
 
   // Set duty cycle for the pins
   if (speed > 0) {
-    pwm_set_chan_level(pwm_gpio_to_slice_num(MOTOR_REVERSE_PIN), PWM_CHAN_A, 0);      
-    pwm_set_chan_level(pwm_gpio_to_slice_num(MOTOR_FORWARD_PIN), PWM_CHAN_A, duty);   
+    pwm_set_chan_level(slice_reverse, chan_reverse, 0);      
+    pwm_set_chan_level(slice_forward, chan_forward, duty);   
   } else if (speed < 0) {
-    pwm_set_chan_level(pwm_gpio_to_slice_num(MOTOR_FORWARD_PIN), PWM_CHAN_A, 0);      
-    pwm_set_chan_level(pwm_gpio_to_slice_num(MOTOR_REVERSE_PIN), PWM_CHAN_A, duty);   
+    pwm_set_chan_level(slice_forward, chan_forward, 0);      
+    pwm_set_chan_level(slice_reverse, chan_reverse, duty);   
   } else {
-    pwm_set_chan_level(pwm_gpio_to_slice_num(MOTOR_FORWARD_PIN), PWM_CHAN_A, 0);      
-    pwm_set_chan_level(pwm_gpio_to_slice_num(MOTOR_REVERSE_PIN), PWM_CHAN_A, 0);
+    pwm_set_chan_level(slice_forward, chan_forward, 0);      
+    pwm_set_chan_level(slice_reverse, chan_reverse, 0);
   }
 }
 
@@ -83,13 +91,13 @@ void setup() {
   pinMode(ONBOARD_LED, OUTPUT);
 
   // Init I2C
-  Wire.setSDA(I2C_SDA_PIN);
-  Wire.setSCL(I2C_SCL_PIN);
-  Wire.begin();
+  Wire1.setSDA(I2C_SDA_PIN);
+  Wire1.setSCL(I2C_SCL_PIN);
+  Wire1.begin();
+  
 
   // Init ToF sensor
-  Adafruit_VL53L1X vl53 = Adafruit_VL53L1X();
-  if (!vl53.begin()) {
+  if (!vl53.begin(0x29, &Wire1)) {
     Serial.println("Failed to detect VL53L1X sensor");
     while(1);
   }
@@ -111,7 +119,7 @@ void loop() {
           break;
         
         // Close command
-        case 'c';
+        case 'c':
           closeGripper();
           Serial.println("closed");
           break;
