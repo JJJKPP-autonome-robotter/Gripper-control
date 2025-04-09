@@ -55,11 +55,11 @@ void setMotorSpeed(int speed) {
 
 // Open gripper function
 void openGripper() {
-  setMotorSpeed(-100);
+  setMotorSpeed(-99);
 
   // Wait for open switch
   while (digitalRead(LIMIT_SWITCH_REVERSE_PIN) == HIGH) {
-    sleep_ms(50);
+    sleep_ms(10);
   }
 
   setMotorSpeed(0);
@@ -67,11 +67,11 @@ void openGripper() {
 
 // Close gripper function
 void closeGripper() {
-  setMotorSpeed(100);
+  setMotorSpeed(99);
 
   // Wait for close switch
   while (digitalRead(LIMIT_SWITCH_FORWARD_PIN) == HIGH) {
-    sleep_ms(50);
+    sleep_ms(10);
   }
 
   setMotorSpeed(0);
