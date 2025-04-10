@@ -16,6 +16,11 @@
 // Define PWM freq
 #define WRAP_VALUE 1000
 #define CLK_DIV 125.0f
+#define OPEN_SPEED -99
+#define CLOSE_SPEED 99
+
+// Global constants
+#define MM_SIZE 20
 
 Adafruit_VL53L1X vl53 = Adafruit_VL53L1X();
 
@@ -55,7 +60,7 @@ void setMotorSpeed(int speed) {
 
 // Open gripper function
 void openGripper() {
-  setMotorSpeed(-99);
+  setMotorSpeed(OPEN_SPEED);
 
   // Wait for open switch
   while (digitalRead(LIMIT_SWITCH_REVERSE_PIN) == HIGH) {
@@ -67,7 +72,7 @@ void openGripper() {
 
 // Close gripper function
 void closeGripper() {
-  setMotorSpeed(99);
+  setMotorSpeed(CLOSE_SPEED);
 
   // Wait for close switch
   while (digitalRead(LIMIT_SWITCH_FORWARD_PIN) == HIGH) {
@@ -98,7 +103,7 @@ void setup() {
 
   // Init ToF sensor
   if (!vl53.begin(0x29, &Wire1)) {
-    Serial.println("Failed to detect VL53L1X sensor");
+    Serial.println("error");
     while(1);
   }
   vl53.startRanging();
@@ -128,13 +133,21 @@ void loop() {
         case 'd':
           if (vl53.dataReady()) {
             uint16_t distance = vl53.distance();
-            Serial.print("Distance: ");
-            Serial.print(distance);
-            Serial.println(" mm");
+            if (distance > MM_SIZE) {
+              Serial.println("false");
+
+            } else {
+              Serial.println("true");
+            }
+
             vl53.clearInterrupt();
           } else {
-            Serial.println("Waiting for data...");
+            Serial.println("error");
           }
+          break;
+        
+        default:
+          Serial.println("error");
           break;
       }
     }
