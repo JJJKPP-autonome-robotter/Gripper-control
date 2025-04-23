@@ -145,10 +145,6 @@ void loop() {
             Serial.println("error");
           }
           break;
-        
-        default:
-          Serial.println("error");
-          break;
       }
     }
 
