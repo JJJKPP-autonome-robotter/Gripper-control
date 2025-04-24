@@ -20,7 +20,7 @@
 #define CLOSE_SPEED 99
 
 // Global constants
-#define MM_SIZE 20
+#define MM_SIZE 35
 
 Adafruit_VL53L1X vl53 = Adafruit_VL53L1X();
 
