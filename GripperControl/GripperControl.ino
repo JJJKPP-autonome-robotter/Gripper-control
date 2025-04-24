@@ -20,7 +20,7 @@
 #define CLOSE_SPEED 99
 
 // Global constants
-#define MM_SIZE 35
+#define MM_SIZE 45
 
 Adafruit_VL53L1X vl53 = Adafruit_VL53L1X();
 
@@ -133,6 +133,7 @@ void loop() {
         case 'd':
           if (vl53.dataReady()) {
             uint16_t distance = vl53.distance();
+            // Serial.println(distance); // For CALI
             if (distance > MM_SIZE) {
               Serial.println("false");
 
